@@ -1,0 +1,128 @@
+jenkins:
+
+1st create ec2 instance jenkins
+
+sudo apt update
+sudo apt install openjdk-17-jre
+
+java -version
+
+curl -fsSL https://pkg.jenkins.io/debian/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update
+sudo apt-get install jenkins
+
+
+
+**Note: ** By default, Jenkins will not be accessible to the external world due to 
+the inbound traffic restriction by AWS. Open port 8080 in the inbound traffic rules as show below.
+
+
+change security group: 
+
+go to instance-> security group-> edit the inbound rules
+
+custom tcp , port : 8080,  0.0.0.0/0
+
+
+go to browser
+http://<public-ip>:8080
+
+jenkins is accessible now
+
+password: sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+install suggested plugins
+
+username,pass,fullname, email ->give
+
+
+to use docker as a agent: 
+
+sudo apt install docker.io
+
+Grant Jenkins user and Ubuntu user permission to docker deamon.
+
+
+
+sudo su - 
+usermod -aG docker jenkins
+usermod -aG docker ubuntu
+systemctl restart docker
+
+su -jenkins
+docker run hello-world
+
+restart jenkins:
+http://<ec2-instance-public-ip>:8080/restart
+
+now go to UI:
+
+install docker plugin:
+
+Go to Manage Jenkins > Manage Plugins(left side).
+In the Available tab, search for "Docker Pipeline".
+Select the plugin and click the Install button.
+Restart Jenkins after the plugin is installed.
+
+
+download and install after
+
+
+now jenkin start:
+
++ new item
+
+always use pipeline
+
+
+Jenkinsfile
+
+pipeline {
+  agent {
+    docker { image 'node:16-alpine' }
+  }
+  stages {
+    stage('Test') {
+      steps {
+        sh 'node --version'
+      }
+    }
+  }
+}
+
+
+if you dont know above? use pipe syntax (automatically give)
+
+ok, then how to execute?
+
+set definition as : pipeline script from scm (source code management)
+
+scm:
+git
+
+repo url:
+set at public
+
+branch:
+*/main
+
+script path:
+if root: JenkinsFile
+
+else: my-first-pipeline/ JenkinsFile
+
+save
+
+click build now on left
+
+once it done,delete the container
+
+
+
+
+
+
